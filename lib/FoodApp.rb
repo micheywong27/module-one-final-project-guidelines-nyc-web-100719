@@ -7,7 +7,6 @@ class FoodApp
         prompt
         greeting
         login
-        choose_sandwich_option
     end
 
     @@cart = []
@@ -22,17 +21,55 @@ class FoodApp
     end
 
     def login
-        username_input = prompt.ask('Create a username: ', default: ENV['USER'])
+        username_input = prompt.ask('Enter a username: ', default: ENV['USER'])
         if !User.find_by(name: username_input)
-            User.create(:name => username_input)
-            prompt.mask("Create a password: ")
+            created_password = prompt.mask("Create a password: ")
+            @@user = User.create(:name => username_input, :password => created_password)
+            puts "* You successfully created your username & password *"
+            choose_sandwich_option
         else 
             #figure out how to not accept a wrong password when you log in
-            User.find_by(name: username_input)
-            prompt.mask("Enter your password: ")
+            @@user = User.find_by(name: username_input)
+            password_input = prompt.mask("Enter your password: ")
+            #require password_input == password
+            show_past_orders
         end
-        puts `clear`
+        
     end
+
+    def show_past_orders
+    #     #if username_input is in database, 
+    #     #welcome them back and ask if they want to see past orders
+        puts "* Welcome back! *"
+        answer = prompt.yes?('Would you like to view your past orders?'.italic.red)  do |q|
+            q.validate(/Y|N/, 'choose the "Y" or "N" key to answer')
+          end
+        if answer == true
+           puts "Your past orders:"
+           previous_sandys = @@user.sandwiches.map do |sandwich|
+                                sandwich.name
+                end
+            puts previous_sandys
+           prompt.yes?('Do you want to select an order from before?'.italic.red) do |q|
+            q.validate(/Y|N/, 'choose the "Y" or "N" key to answer')
+                end
+                if answer == true
+                    choices = previous_sandys
+                    order_they_want = prompt.select('Which order do you want?',choices)
+                     @@cart << "#{order_they_want} - $#{Sandwich.find_by(name: order_they_want).prices}"
+                    review_cart
+                else 
+                    puts "*" * 80
+                    choose_sandwich_option
+                end
+        else 
+            puts `clear`
+            choose_sandwich_option
+        end
+    end
+
+
+
 
     def choose_sandwich_option
         choices = ["Select a premade sandy", "Build your own!"]
@@ -86,7 +123,8 @@ class FoodApp
         end
        total_price = ingredient_price.inject(:+)
        sandy_name = prompt.ask('Name your sandwich!'.red, default: ENV['USER'])
-       Sandwich.create(:name=>sandy_name, :prices=>total_price)
+       new_sandy = Sandwich.create(:name=>sandy_name, :prices=>total_price)
+       UserSandwich.create(:user_id => @@user.id, :sandwich_id => new_sandy.id)
        select_drink
     end
 
@@ -151,15 +189,12 @@ class FoodApp
                     delete_item
                 end
         else 
-            puts `clear`
             rating
         end
      end
 
      def add_to_order
      choose_sandwich_option
-    #  select_drink
-    #  review_cart
     end
 
     def delete_item
