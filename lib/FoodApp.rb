@@ -1,7 +1,6 @@
 require "tty-prompt"
 require 'pry'
 
-
 class FoodApp 
     def run
         prompt
@@ -128,7 +127,7 @@ class FoodApp
         choices = ["Coke - $2", "Pepsi - $2", "Tea - $1", "Water - $1", "Lemonade - $2", "None"]
         user_choice =prompt.multi_select("Select any drinks you would like:".red, choices)
         @@cart << user_choice
-        if user_choice.include?("None")
+        if user_choice.include?("None") || user_choice.empty?
             @@cart.flatten!.delete("None")
             review_cart
         else 
@@ -160,12 +159,30 @@ class FoodApp
        prices = @@cart.flatten.map do |ingredient|
             ingredient.split("$")[1].to_i
          end
-         total_prices = prices.inject(:+)
-         puts "Your total: $#{total_prices}".bold.blue
+         @@total_prices = prices.inject(:+)
+         puts "Your total: $#{@@total_prices}".bold.blue
          select_more_options
-     end
+    end
+     
 
-     def select_more_options
+
+    def discount
+        inputed_discount = prompt.ask('Apply code:', default: ENV['DISCOUNT'])
+        discount = "pumpkin"
+            if inputed_discount == discount
+                puts "Your discount code was successful!"
+                @@total_prices = @@total_prices.to_f * 0.8
+                puts "Your total: $#{@@total_prices.round(2)}".bold.blue 
+            else
+                puts "Discount code does not apply"
+                puts "Your total: $#{@@total_prices}".bold.blue 
+            end
+        rating
+    end
+
+
+
+    def select_more_options
         answer = prompt.yes?('Do you want to add anything else or edit your order?'.italic.red)  do |q|
             q.validate(/Y|N/, 'choose the "Y" or "N" key to answer')
           end
@@ -179,11 +196,18 @@ class FoodApp
                     delete_item
                 end
         else 
-            rating
+            answer = prompt.yes?('Would you like to apply a discount code?'.italic.red)  do |q|
+                q.validate(/Y|N/, 'choose the "Y" or "N" key to answer') 
+            end
+            if answer == true
+                discount
+            else 
+                rating
+            end
         end
-     end
+    end
 
-     def add_to_order
+    def add_to_order
      choose_sandwich_option
     end
 
@@ -206,4 +230,3 @@ class FoodApp
     end
 
 end
-
