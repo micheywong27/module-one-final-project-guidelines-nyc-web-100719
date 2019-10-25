@@ -38,8 +38,6 @@ class FoodApp
     end
 
     def show_past_orders
-    #     #if username_input is in database, 
-    #     #welcome them back and ask if they want to see past orders
         puts "* Welcome back! *"
         answer = prompt.yes?('Would you like to view your past orders?'.italic.red)  do |q|
             q.validate(/Y|N/, 'choose the "Y" or "N" key to answer')
@@ -50,7 +48,7 @@ class FoodApp
                                 sandwich.name
                 end
             puts previous_sandys
-           prompt.yes?('Do you want to select an order from before?'.italic.red) do |q|
+           answer = prompt.yes?('Do you want to select an order from before?'.italic.red) do |q|
             q.validate(/Y|N/, 'choose the "Y" or "N" key to answer')
                 end
                 if answer == true
@@ -67,8 +65,6 @@ class FoodApp
             choose_sandwich_option
         end
     end
-
-
 
 
     def choose_sandwich_option
@@ -135,15 +131,13 @@ class FoodApp
         if user_choice.include?("None")
             @@cart.flatten!.delete("None")
             review_cart
-           
         else 
            choice = prompt.select('What size?'.blue) do |menu|
                 menu.choice 'Small', 1
                 menu.choice 'Medium', 2, disabled: '(out of stock)'
                 menu.choice 'Large', 3
                 menu.choice '<-- Go Back', 4
-            end  
-          
+                end  
             if choice == 4
                 select_drink
             else
@@ -153,10 +147,6 @@ class FoodApp
         end
 
     end
-
-    #def save_to_favorites
-
-    #end
 
     def review_cart
         puts "*" * 80
